@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "mmre46VnvecRjzAsdlp9Z6rAUW7f46qnZ9Yh7HEVxgv1I7fliEB9AuDckE2+9tVusyuoCP03ELOF9hrEI/eKIA==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Eridw\\Desktop\\MonProjet\\MonProjet.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Eridw\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\7.0.9\\microsoft.netcore.app.runtime.win-x64.7.0.9.nupkg.sha512",
+    "C:\\Users\\Eridw\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\7.0.9\\microsoft.windowsdesktop.app.runtime.win-x64.7.0.9.nupkg.sha512",
+    "C:\\Users\\Eridw\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\7.0.9\\microsoft.aspnetcore.app.runtime.win-x64.7.0.9.nupkg.sha512"
+  ],
+  "logs": []
+}
