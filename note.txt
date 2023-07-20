@@ -1,0 +1,57 @@
+Pour créer un nouveau projet C# avec Visual Studio Code, vous pouvez utiliser la ligne de commande .NET CLI (Command-Line Interface). Voici comment vous pouvez procéder :
+
+1. Ouvrez un terminal. Si vous êtes sous Windows, vous pouvez utiliser l'invite de commande ou PowerShell.
+
+2. Déplacez-vous dans le répertoire où vous voulez créer le nouveau projet. Par exemple, si vous voulez créer le projet dans un dossier appelé "MonProjet" sur le bureau, tapez :
+
+   ```bash
+   cd Desktop
+   mkdir MonProjet
+   cd MonProjet
+   ```
+
+3. Créez un nouveau projet C#. Si vous voulez créer une application console, tapez :
+
+   ```bash
+   dotnet new console
+   ```
+
+   Si vous voulez créer une application Windows Forms (ce qui semble être le cas ici), tapez :
+
+   ```bash
+   dotnet new winforms
+   ```
+
+   Note : La commande `dotnet new winforms` ne fonctionne qu'avec .NET Core 3.0 et versions ultérieures, et seulement sous Windows.
+
+4. Ouvrez le projet dans Visual Studio Code. Vous pouvez le faire en tapant :
+
+   ```bash
+   code .
+   ```
+
+   Cela ouvrira Visual Studio Code dans le répertoire actuel.
+
+Maintenant, vous devriez avoir un nouveau projet C# ouvert dans Visual Studio Code. Vous pouvez voir les fichiers du projet dans l'explorateur de fichiers à gauche, et vous pouvez éditer ces fichiers dans l'éditeur de code à droite. 
+
+Pour exécuter le projet, vous pouvez utiliser la commande `dotnet run` dans le terminal.
+
+
+
+Pour compiler votre projet C# en un exécutable, vous pouvez utiliser la commande `dotnet publish` de .NET CLI (Command-Line Interface). Cette commande compile votre projet, inclut toutes les dépendances nécessaires, et crée un dossier contenant tout ce dont vous avez besoin pour exécuter votre application.
+
+Voici comment vous pouvez procéder :
+
+1. Ouvrez un terminal dans Visual Studio Code. Vous pouvez le faire en allant dans le menu `Terminal > Nouveau terminal`, ou en appuyant sur `` Ctrl+` `` (la touche en haut à gauche de votre clavier).
+
+2. Dans le terminal, tapez :
+
+   ```bash
+   dotnet publish -c Release -r win10-x64 --self-contained false
+   ```
+
+   Cette commande crée une version de votre application pour Windows 10 en 64 bits. L'option `-c Release` spécifie que vous voulez créer une version de sortie de votre application (par opposition à une version de débogage). L'option `-r win10-x64` spécifie la plateforme cible. L'option `--self-contained false` spécifie que l'application doit utiliser le runtime .NET installé sur l'ordinateur de l'utilisateur, plutôt que d'inclure son propre runtime.
+
+3. Une fois que la commande a terminé, vous pouvez trouver l'exécutable dans le dossier `bin\Release\net5.0\win10-x64\publish` (ou `bin\Release\<votre version de .NET>\<votre plateforme cible>\publish` si vous avez utilisé des valeurs différentes pour la version de .NET et la plateforme cible).
+
+Vous pouvez maintenant exécuter l'exécutable sur n'importe quel ordinateur exécutant Windows 10 en 64 bits qui a le runtime .NET approprié installé. Si vous voulez que votre application soit complètement autonome et n'ait pas besoin du runtime .NET installé, vous pouvez supprimer l'option `--self-contained false` de la commande `dotnet publish`.
