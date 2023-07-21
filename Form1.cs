@@ -14,6 +14,8 @@ public partial class Form1 : Form
     private ToolStripMenuItem settingsToolStripMenuItem;
     private ToolStripMenuItem backupToolStripMenuItem;
     private System.Timers.Timer backupTimer;
+    public static double maxBackupSizeInGB = 10.0;  // Limite de la sauvegarde à 10 Go
+
     public Form1()
     {
         notifyIcon = new NotifyIcon();
@@ -108,6 +110,18 @@ public partial class Form1 : Form
 
     private void PerformDifferentialBackup(string sourceDirectory, string destinationDirectory, BackgroundWorker backupWorker, int totalFiles, ref int processedFiles)
     {
+        DriveInfo drive = new DriveInfo(Path.GetPathRoot(destinationDirectory));
+        double freeSpaceInGB = drive.AvailableFreeSpace / Math.Pow(1024, 3);
+
+        // Get the total size of source directory
+        double sourceSizeInGB = GetDirectorySizeInGB(sourceDirectory);
+
+        if (freeSpaceInGB < sourceSizeInGB || sourceSizeInGB > maxBackupSizeInGB)
+        {
+            MessageBox.Show("Espace disque insuffisant pour la sauvegarde. Veuillez libérer de l'espace et réessayer.");
+            return;
+        }
+
         string lastFullBackupFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "lastFullBackup.txt");
         DateTime lastFullBackupTime;
 
@@ -151,6 +165,14 @@ public partial class Form1 : Form
         File.WriteAllText(lastFullBackupFilePath, DateTime.Now.ToString());
     }
 
+    private double GetDirectorySizeInGB(string directoryPath)
+    {
+        DirectoryInfo di = new DirectoryInfo(directoryPath);
+        long sizeInBytes = di.EnumerateFiles("*", SearchOption.AllDirectories).Sum(fi => fi.Length);
+        return sizeInBytes / Math.Pow(1024, 3);
+    }
+
+
 
 }
 public partial class SettingsForm : Form
@@ -163,7 +185,8 @@ public partial class SettingsForm : Form
     private Button removeSourceButton;
     private TextBox destinationTextBox;
     private Button selectDestinationButton;
-
+    private NumericUpDown backupSizeLimitNumericUpDown;
+    private Label backupSizeLimitLabel;
     public SettingsForm()
     {
         this.Width = 600;
@@ -207,6 +230,26 @@ public partial class SettingsForm : Form
         selectDestinationButton.Location = new System.Drawing.Point(20, 60);
         selectDestinationButton.Click += new EventHandler(SelectDestinationButton_Click);
         destinationTabPage.Controls.Add(selectDestinationButton);
+
+        backupSizeLimitLabel = new Label();
+        backupSizeLimitLabel.Text = "Taille max (Go):";
+        backupSizeLimitLabel.Location = new System.Drawing.Point(20, 100);
+        destinationTabPage.Controls.Add(backupSizeLimitLabel);
+
+        backupSizeLimitNumericUpDown = new NumericUpDown();
+        backupSizeLimitNumericUpDown.Minimum = 1;
+        backupSizeLimitNumericUpDown.Maximum = 10000;  // Limite maximale de 10000 Go
+        backupSizeLimitNumericUpDown.Value = (decimal)Form1.maxBackupSizeInGB;
+        backupSizeLimitNumericUpDown.Location = new System.Drawing.Point(20, 130);
+        destinationTabPage.Controls.Add(backupSizeLimitNumericUpDown);
+
+        string backupSizeLimitFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backupSizeLimit.json");
+        if (File.Exists(backupSizeLimitFilePath))
+        {
+            string backupSizeLimitJson = File.ReadAllText(backupSizeLimitFilePath);
+            double backupSizeLimit = JsonSerializer.Deserialize<double>(backupSizeLimitJson);
+            backupSizeLimitNumericUpDown.Value = (decimal)backupSizeLimit;
+        }
 
         try
         {
@@ -272,6 +315,12 @@ public partial class SettingsForm : Form
 
     private void SettingsForm_FormClosing(object Sender, FormClosingEventArgs e)
     {
+        Form1.maxBackupSizeInGB = (double)backupSizeLimitNumericUpDown.Value;
+        string backupSizeLimitFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backupSizeLimit.json");
+        double backupSizeLimit = (double)backupSizeLimitNumericUpDown.Value;
+        string backupSizeLimitJson = JsonSerializer.Serialize(backupSizeLimit);
+        File.WriteAllText(backupSizeLimitFilePath, backupSizeLimitJson);
+
         try
         {
             List<string> sourcePaths = new List<string>();
@@ -347,3 +396,4 @@ public partial class ProgressForm : Form
         progressLabel.Text = text;
     }
 }
+
