@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows.Forms;
 using System.Diagnostics;
+using System.ComponentModel; 
 
 public partial class Form1 : Form
 {
@@ -12,7 +13,7 @@ public partial class Form1 : Form
     private ToolStripMenuItem exitToolStripMenuItem;
     private ToolStripMenuItem settingsToolStripMenuItem;
     private ToolStripMenuItem backupToolStripMenuItem;
-
+    private System.Timers.Timer backupTimer;
     public Form1()
     {
         notifyIcon = new NotifyIcon();
@@ -38,10 +39,18 @@ public partial class Form1 : Form
         notifyIcon.ContextMenuStrip = contextMenuStrip;
         notifyIcon.Visible = true;
 
+        backupTimer = new System.Timers.Timer();
+        backupTimer.Interval = 3600000; // 1 hour in milliseconds
+        backupTimer.Elapsed += OnBackupTimerElapsed;
+        backupTimer.Start();
+
         this.WindowState = FormWindowState.Minimized;
         this.ShowInTaskbar = false;
     }
-
+    private void OnBackupTimerElapsed(object Sender, System.Timers.ElapsedEventArgs e)
+    {
+        BackupToolStripMenuItem_Click(null, null);
+    }
     private void ExitToolStripMenuItem_Click(object? Sender, EventArgs e)
     {
         notifyIcon.Visible = false;
@@ -56,23 +65,48 @@ public partial class Form1 : Form
 
     private void BackupToolStripMenuItem_Click(object? Sender, EventArgs e)
     {
-        string sourcePathsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "sourcePaths.json");
-        string destinationPathFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "destinationPath.json");
+        ProgressForm progressForm = new ProgressForm();
+        progressForm.Show();
 
-        if (File.Exists(sourcePathsFilePath) && File.Exists(destinationPathFilePath))
+        BackgroundWorker backupWorker = new BackgroundWorker();
+        backupWorker.WorkerReportsProgress = true;
+
+        backupWorker.DoWork += (s, args) =>
         {
-            string sourcePathsJson = File.ReadAllText(sourcePathsFilePath);
-            List<string> sourcePaths = JsonSerializer.Deserialize<List<string>>(sourcePathsJson);
-            string destinationPath = File.ReadAllText(destinationPathFilePath);
+            string sourcePathsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "sourcePaths.json");
+            string destinationPathFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "destinationPath.json");
 
-            foreach (string sourcePath in sourcePaths)
+            if (File.Exists(sourcePathsFilePath) && File.Exists(destinationPathFilePath))
             {
-                PerformDifferentialBackup(sourcePath, destinationPath);
+                string sourcePathsJson = File.ReadAllText(sourcePathsFilePath);
+                List<string> sourcePaths = JsonSerializer.Deserialize<List<string>>(sourcePathsJson);
+                string destinationPath = File.ReadAllText(destinationPathFilePath);
+
+                int totalFiles = sourcePaths.Sum(path => Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories).Count());
+
+                int processedFiles = 0;
+                foreach (string sourcePath in sourcePaths)
+                {
+                    PerformDifferentialBackup(sourcePath, destinationPath, backupWorker, totalFiles, ref processedFiles);
+                }
             }
-        }
+        };
+
+        backupWorker.ProgressChanged += (s, args) =>
+        {
+            progressForm.UpdateProgress(args.ProgressPercentage, $"Sauvegarde en cours : {args.ProgressPercentage}% terminé");
+        };
+
+        backupWorker.RunWorkerCompleted += (s, args) =>
+        {
+            progressForm.Close();
+            notifyIcon.ShowBalloonTip(3000, "Backup Completed", "Sauvegarde effectuée avec succès.", ToolTipIcon.Info);
+        };
+
+        backupWorker.RunWorkerAsync();
     }
 
-    private void PerformDifferentialBackup(string sourceDirectory, string destinationDirectory)
+    private void PerformDifferentialBackup(string sourceDirectory, string destinationDirectory, BackgroundWorker backupWorker, int totalFiles, ref int processedFiles)
     {
         string lastFullBackupFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "lastFullBackup.txt");
         DateTime lastFullBackupTime;
@@ -108,10 +142,15 @@ public partial class Form1 : Form
                     File.Copy(sourceFilePath, destinationFilePath, overwrite: true);
                 }
             }
+
+            processedFiles++;
+            int progressPercentage = processedFiles * 100 / totalFiles;
+            backupWorker.ReportProgress(progressPercentage);
         }
 
         File.WriteAllText(lastFullBackupFilePath, DateTime.Now.ToString());
     }
+
 
 }
 public partial class SettingsForm : Form
@@ -257,4 +296,54 @@ public partial class SettingsForm : Form
     }
 
 
+}
+public partial class ProgressForm : Form
+{
+    private ProgressBar progressBar;
+    private Label titleLabel;
+    private Label progressLabel;
+
+    public ProgressForm()
+    {
+        this.FormBorderStyle = FormBorderStyle.None;
+        this.BackColor = Color.LimeGreen;
+        this.TransparencyKey = Color.LimeGreen;
+        this.Size = new Size(200, 80);
+        this.StartPosition = FormStartPosition.Manual;
+        this.Location = new Point(Screen.PrimaryScreen.Bounds.Width - this.Width - 10, Screen.PrimaryScreen.Bounds.Height - this.Height - 60);
+        
+        Panel panel = new Panel();
+        panel.Dock = DockStyle.Fill;
+        panel.Padding = new Padding(10);
+        panel.BackColor = Color.Black;
+        this.Controls.Add(panel);
+
+        titleLabel = new Label();
+        titleLabel.Dock = DockStyle.Top;
+        titleLabel.ForeColor = Color.White;
+        titleLabel.Text = "Sauvegarde en cours";
+        titleLabel.TextAlign = ContentAlignment.MiddleCenter;
+        panel.Controls.Add(titleLabel);
+
+        progressBar = new ProgressBar();
+        progressBar.Dock = DockStyle.Fill;
+        progressBar.Minimum = 0;
+        progressBar.Maximum = 100;
+        progressBar.Style = ProgressBarStyle.Continuous;
+        progressBar.ForeColor = Color.LimeGreen;
+        progressBar.BackColor = Color.DarkGray;
+        panel.Controls.Add(progressBar);
+
+        progressLabel = new Label();
+        progressLabel.Dock = DockStyle.Bottom;
+        progressLabel.ForeColor = Color.White;
+        progressLabel.TextAlign = ContentAlignment.MiddleCenter;
+        panel.Controls.Add(progressLabel);
+    }
+
+    public void UpdateProgress(int percent, string text)
+    {
+        progressBar.Value = percent;
+        progressLabel.Text = text;
+    }
 }
