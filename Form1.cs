@@ -11,6 +11,7 @@ public partial class Form1 : Form
     private ContextMenuStrip contextMenuStrip;
     private ToolStripMenuItem exitToolStripMenuItem;
     private ToolStripMenuItem settingsToolStripMenuItem;
+    private ToolStripMenuItem backupToolStripMenuItem;
 
     public Form1()
     {
@@ -18,6 +19,7 @@ public partial class Form1 : Form
         contextMenuStrip = new ContextMenuStrip();
         exitToolStripMenuItem = new ToolStripMenuItem();
         settingsToolStripMenuItem = new ToolStripMenuItem();
+        backupToolStripMenuItem = new ToolStripMenuItem();
 
         exitToolStripMenuItem.Text = "Exit";
         exitToolStripMenuItem.Click += new EventHandler(ExitToolStripMenuItem_Click);
@@ -25,9 +27,13 @@ public partial class Form1 : Form
         settingsToolStripMenuItem.Text = "Settings";
         settingsToolStripMenuItem.Click += new EventHandler(SettingsToolStripMenuItem_Click);
 
+        backupToolStripMenuItem.Text = "Backup Now";
+        backupToolStripMenuItem.Click += new EventHandler(BackupToolStripMenuItem_Click);
+
+        contextMenuStrip.Items.Add(backupToolStripMenuItem);
         contextMenuStrip.Items.Add(settingsToolStripMenuItem);
         contextMenuStrip.Items.Add(exitToolStripMenuItem);
-        
+
         notifyIcon.Icon = SystemIcons.Application;
         notifyIcon.ContextMenuStrip = contextMenuStrip;
         notifyIcon.Visible = true;
@@ -47,8 +53,67 @@ public partial class Form1 : Form
         SettingsForm settingsForm = new SettingsForm();
         settingsForm.Show();
     }
-}
 
+    private void BackupToolStripMenuItem_Click(object? Sender, EventArgs e)
+    {
+        string sourcePathsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "sourcePaths.json");
+        string destinationPathFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "destinationPath.json");
+
+        if (File.Exists(sourcePathsFilePath) && File.Exists(destinationPathFilePath))
+        {
+            string sourcePathsJson = File.ReadAllText(sourcePathsFilePath);
+            List<string> sourcePaths = JsonSerializer.Deserialize<List<string>>(sourcePathsJson);
+            string destinationPath = File.ReadAllText(destinationPathFilePath);
+
+            foreach (string sourcePath in sourcePaths)
+            {
+                PerformDifferentialBackup(sourcePath, destinationPath);
+            }
+        }
+    }
+
+    private void PerformDifferentialBackup(string sourceDirectory, string destinationDirectory)
+    {
+        string lastFullBackupFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "lastFullBackup.txt");
+        DateTime lastFullBackupTime;
+
+        if (File.Exists(lastFullBackupFilePath))
+        {
+            string lastFullBackupTimeString = File.ReadAllText(lastFullBackupFilePath);
+            lastFullBackupTime = DateTime.Parse(lastFullBackupTimeString);
+        }
+        else
+        {
+            lastFullBackupTime = DateTime.MinValue;
+        }
+
+        string userName = Environment.UserName;
+        destinationDirectory = Path.Combine(destinationDirectory, userName, new DirectoryInfo(sourceDirectory).Name);
+
+        foreach (var sourceFilePath in Directory.EnumerateFiles(sourceDirectory, "*", SearchOption.AllDirectories))
+        {
+            string relativePath = sourceFilePath.Substring(sourceDirectory.Length + 1);
+            string destinationFilePath = Path.Combine(destinationDirectory, relativePath);
+
+            if (!File.Exists(destinationFilePath))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationFilePath));
+                File.Copy(sourceFilePath, destinationFilePath);
+            }
+            else
+            {
+                FileInfo sourceFileInfo = new FileInfo(sourceFilePath);
+                if (sourceFileInfo.LastWriteTime > lastFullBackupTime)
+                {
+                    File.Copy(sourceFilePath, destinationFilePath, overwrite: true);
+                }
+            }
+        }
+
+        File.WriteAllText(lastFullBackupFilePath, DateTime.Now.ToString());
+    }
+
+}
 public partial class SettingsForm : Form
 {
     private TabControl tabControl;
@@ -118,7 +183,7 @@ public partial class SettingsForm : Form
                 //MessageBox.Show($"Source paths loaded from {sourcePathsFilePath}");
             }
 
-            string destinationPathFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "destinationPath.txt");
+            string destinationPathFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "destinationPath.json");
             if (File.Exists(destinationPathFilePath))
             {
                 string destinationPath = File.ReadAllText(destinationPathFilePath);

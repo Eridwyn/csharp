@@ -8,23 +8,26 @@
     "net7.0-windows7.0": []
   },
   "packageFolders": {
-    "C:\\Users\\MAIRIE_PORTABLE1\\.nuget\\packages\\": {}
+    "C:\\Users\\Eridw\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\MAIRIE_PORTABLE1\\Documents\\WindowsPowerShell\\Scripts\\csharp\\csharp.csproj",
+      "projectUniqueName": "C:\\Users\\Eridw\\source\\repos\\C#\\csharp.csproj",
       "projectName": "csharp",
-      "projectPath": "C:\\Users\\MAIRIE_PORTABLE1\\Documents\\WindowsPowerShell\\Scripts\\csharp\\csharp.csproj",
-      "packagesPath": "C:\\Users\\MAIRIE_PORTABLE1\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\MAIRIE_PORTABLE1\\Documents\\WindowsPowerShell\\Scripts\\csharp\\obj\\",
+      "projectPath": "C:\\Users\\Eridw\\source\\repos\\C#\\csharp.csproj",
+      "packagesPath": "C:\\Users\\Eridw\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Eridw\\source\\repos\\C#\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\MAIRIE_PORTABLE1\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\Eridw\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net7.0-windows"
       ],
+      "sources": {
+        "https://api.nuget.org/v3/index.json": {}
+      },
       "frameworks": {
         "net7.0-windows7.0": {
           "targetAlias": "net7.0-windows",
