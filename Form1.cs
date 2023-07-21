@@ -20,6 +20,8 @@ public partial class Form1 : Form
     public Form1()
     {
         notifyIcon = new NotifyIcon();
+        notifyIcon.Icon = new System.Drawing.Icon("maing.ico"); // Set the application icon
+        notifyIcon.Text = "Logiciel de sauvegarde";
         contextMenuStrip = new ContextMenuStrip();
         exitToolStripMenuItem = new ToolStripMenuItem();
         settingsToolStripMenuItem = new ToolStripMenuItem();
@@ -38,18 +40,25 @@ public partial class Form1 : Form
         contextMenuStrip.Items.Add(settingsToolStripMenuItem);
         contextMenuStrip.Items.Add(exitToolStripMenuItem);
 
-        notifyIcon.Icon = SystemIcons.Application;
         notifyIcon.ContextMenuStrip = contextMenuStrip;
         notifyIcon.Visible = true;
 
         backupTimer = new System.Timers.Timer();
-        backupTimer.Interval = 3600000; // 1 heure en millisecondes
-        backupTimer.Elapsed += OnBackupTimerElapsed;
+
+        string backupIntervalFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backupInterval.json");
+        if (File.Exists(backupIntervalFilePath))
+        {
+            string backupIntervalJson = File.ReadAllText(backupIntervalFilePath);
+            double backupInterval = JsonSerializer.Deserialize<double>(backupIntervalJson);
+            backupTimer.Interval = backupInterval * 3600000;  // Convertir les heures en millisecondes
+        }
+
         backupTimer.Start();
 
         this.WindowState = FormWindowState.Minimized;
         this.ShowInTaskbar = false;
     }
+
     private void OnBackupTimerElapsed(object? Sender, System.Timers.ElapsedEventArgs e)
     {
         BackupToolStripMenuItem_Click(null, null);

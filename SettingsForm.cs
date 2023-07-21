@@ -12,11 +12,14 @@ public partial class SettingsForm : Form
     private Button selectDestinationButton;
     private NumericUpDown backupSizeLimitNumericUpDown;
     private Label backupSizeLimitLabel;
+    private NumericUpDown backupIntervalNumericUpDown;
     public SettingsForm()
     {
         this.Width = 600;
         this.Height = 400;
         this.FormClosing += SettingsForm_FormClosing;
+        this.Icon = new Icon("maing.ico");
+        this.Text = "Paramètres de sauvegarde";
 
         tabControl = new TabControl();
         tabControl.Dock = DockStyle.Fill;
@@ -65,8 +68,30 @@ public partial class SettingsForm : Form
         backupSizeLimitNumericUpDown.Minimum = 1;
         backupSizeLimitNumericUpDown.Maximum = 10000;  // Limite maximale de 10000 Go
         backupSizeLimitNumericUpDown.Value = (decimal)Form1.maxBackupSizeInGB;
-        backupSizeLimitNumericUpDown.Location = new System.Drawing.Point(20, 130);
+        backupSizeLimitNumericUpDown.Location = new System.Drawing.Point(20, 120);
         destinationTabPage.Controls.Add(backupSizeLimitNumericUpDown);
+
+        Label backupIntervalLabel = new Label();
+        backupIntervalLabel.Text = "Interval (en heures):";
+        backupIntervalLabel.AutoSize = true;
+        backupIntervalLabel.Location = new System.Drawing.Point(20, 150); // Positionnez le label au-dessus du NumericUpDown
+        destinationTabPage.Controls.Add(backupIntervalLabel);
+
+        backupIntervalNumericUpDown = new NumericUpDown();
+        backupIntervalNumericUpDown.Minimum = 1;
+        backupIntervalNumericUpDown.Maximum = 24;  // L'utilisateur peut choisir jusqu'à 24 heures
+        backupIntervalNumericUpDown.Value = 1;     // Par défaut, la sauvegarde est effectuée toutes les heures
+        backupIntervalNumericUpDown.Location = new System.Drawing.Point(20, 170); // Changez ces valeurs pour positionner le NumericUpDown à l'endroit souhaité
+        destinationTabPage.Controls.Add(backupIntervalNumericUpDown);
+
+        string backupIntervalFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backupInterval.json");
+        if (File.Exists(backupIntervalFilePath))
+        {
+            string backupIntervalJson = File.ReadAllText(backupIntervalFilePath);
+            double backupInterval = JsonSerializer.Deserialize<double>(backupIntervalJson);
+            backupIntervalNumericUpDown.Value = (decimal)backupInterval;
+        }
+
 
         string backupSizeLimitFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backupSizeLimit.json");
         if (File.Exists(backupSizeLimitFilePath))
@@ -143,6 +168,12 @@ public partial class SettingsForm : Form
         double backupSizeLimit = (double)backupSizeLimitNumericUpDown.Value;
         string backupSizeLimitJson = JsonSerializer.Serialize(backupSizeLimit);
         File.WriteAllText(backupSizeLimitFilePath, backupSizeLimitJson);
+
+        string backupIntervalFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backupInterval.json");
+        double backupInterval = (double)backupIntervalNumericUpDown.Value;
+        string backupIntervalJson = JsonSerializer.Serialize(backupInterval);
+        File.WriteAllText(backupIntervalFilePath, backupIntervalJson);
+
 
         try
         {
