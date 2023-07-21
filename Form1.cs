@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,13 +25,13 @@ public partial class Form1 : Form
         settingsToolStripMenuItem = new ToolStripMenuItem();
         backupToolStripMenuItem = new ToolStripMenuItem();
 
-        exitToolStripMenuItem.Text = "Exit";
+        exitToolStripMenuItem.Text = "Quitter";
         exitToolStripMenuItem.Click += new EventHandler(ExitToolStripMenuItem_Click);
 
-        settingsToolStripMenuItem.Text = "Settings";
+        settingsToolStripMenuItem.Text = "Paramètres";
         settingsToolStripMenuItem.Click += new EventHandler(SettingsToolStripMenuItem_Click);
 
-        backupToolStripMenuItem.Text = "Backup Now";
+        backupToolStripMenuItem.Text = "Sauvegarder maintenant";
         backupToolStripMenuItem.Click += new EventHandler(BackupToolStripMenuItem_Click);
 
         contextMenuStrip.Items.Add(backupToolStripMenuItem);
@@ -42,14 +43,14 @@ public partial class Form1 : Form
         notifyIcon.Visible = true;
 
         backupTimer = new System.Timers.Timer();
-        backupTimer.Interval = 3600000; // 1 hour in milliseconds
+        backupTimer.Interval = 3600000; // 1 heure en millisecondes
         backupTimer.Elapsed += OnBackupTimerElapsed;
         backupTimer.Start();
 
         this.WindowState = FormWindowState.Minimized;
         this.ShowInTaskbar = false;
     }
-    private void OnBackupTimerElapsed(object Sender, System.Timers.ElapsedEventArgs e)
+    private void OnBackupTimerElapsed(object? Sender, System.Timers.ElapsedEventArgs e)
     {
         BackupToolStripMenuItem_Click(null, null);
     }
@@ -102,7 +103,7 @@ public partial class Form1 : Form
         backupWorker.RunWorkerCompleted += (s, args) =>
         {
             progressForm.Close();
-            notifyIcon.ShowBalloonTip(3000, "Backup Completed", "Sauvegarde effectuée avec succès.", ToolTipIcon.Info);
+            notifyIcon.ShowBalloonTip(3000, "Sauvegarde terminée", "Sauvegarde effectuée avec succès.", ToolTipIcon.Info);
         };
 
         backupWorker.RunWorkerAsync();
@@ -111,6 +112,7 @@ public partial class Form1 : Form
     private void PerformDifferentialBackup(string sourceDirectory, string destinationDirectory, BackgroundWorker backupWorker, int totalFiles, ref int processedFiles)
     {
         DriveInfo drive = new DriveInfo(Path.GetPathRoot(destinationDirectory));
+        
         double freeSpaceInGB = drive.AvailableFreeSpace / Math.Pow(1024, 3);
 
         // Get the total size of source directory
@@ -171,229 +173,4 @@ public partial class Form1 : Form
         long sizeInBytes = di.EnumerateFiles("*", SearchOption.AllDirectories).Sum(fi => fi.Length);
         return sizeInBytes / Math.Pow(1024, 3);
     }
-
-
-
 }
-public partial class SettingsForm : Form
-{
-    private TabControl tabControl;
-    private TabPage sourceTabPage;
-    private TabPage destinationTabPage;
-    private ListBox sourceListBox;
-    private Button addSourceButton;
-    private Button removeSourceButton;
-    private TextBox destinationTextBox;
-    private Button selectDestinationButton;
-    private NumericUpDown backupSizeLimitNumericUpDown;
-    private Label backupSizeLimitLabel;
-    public SettingsForm()
-    {
-        this.Width = 600;
-        this.Height = 400;
-        this.FormClosing += SettingsForm_FormClosing;
-
-        tabControl = new TabControl();
-        tabControl.Dock = DockStyle.Fill;
-        this.Controls.Add(tabControl);
-
-        sourceTabPage = new TabPage("Source");
-        destinationTabPage = new TabPage("Destination");
-        tabControl.TabPages.Add(sourceTabPage);
-        tabControl.TabPages.Add(destinationTabPage);
-
-        sourceListBox = new ListBox();
-        sourceListBox.Width = 500;
-        sourceListBox.Height = 200;
-        sourceListBox.Location = new System.Drawing.Point(20, 20);
-        sourceTabPage.Controls.Add(sourceListBox);
-
-        addSourceButton = new Button();
-        addSourceButton.Text = "Add Source";
-        addSourceButton.Location = new System.Drawing.Point(20, 240);
-        addSourceButton.Click += new EventHandler(AddSourceButton_Click);
-        sourceTabPage.Controls.Add(addSourceButton);
-
-        removeSourceButton = new Button();
-        removeSourceButton.Text = "Remove Source";
-        removeSourceButton.Location = new System.Drawing.Point(120, 240);
-        removeSourceButton.Click += new EventHandler(RemoveSourceButton_Click);
-        sourceTabPage.Controls.Add(removeSourceButton);
-
-        destinationTextBox = new TextBox();
-        destinationTextBox.Width = 500;
-        destinationTextBox.Location = new System.Drawing.Point(20, 20);
-        destinationTabPage.Controls.Add(destinationTextBox);
-
-        selectDestinationButton = new Button();
-        selectDestinationButton.Text = "Select Destination";
-        selectDestinationButton.Location = new System.Drawing.Point(20, 60);
-        selectDestinationButton.Click += new EventHandler(SelectDestinationButton_Click);
-        destinationTabPage.Controls.Add(selectDestinationButton);
-
-        backupSizeLimitLabel = new Label();
-        backupSizeLimitLabel.Text = "Taille max (Go):";
-        backupSizeLimitLabel.Location = new System.Drawing.Point(20, 100);
-        destinationTabPage.Controls.Add(backupSizeLimitLabel);
-
-        backupSizeLimitNumericUpDown = new NumericUpDown();
-        backupSizeLimitNumericUpDown.Minimum = 1;
-        backupSizeLimitNumericUpDown.Maximum = 10000;  // Limite maximale de 10000 Go
-        backupSizeLimitNumericUpDown.Value = (decimal)Form1.maxBackupSizeInGB;
-        backupSizeLimitNumericUpDown.Location = new System.Drawing.Point(20, 130);
-        destinationTabPage.Controls.Add(backupSizeLimitNumericUpDown);
-
-        string backupSizeLimitFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backupSizeLimit.json");
-        if (File.Exists(backupSizeLimitFilePath))
-        {
-            string backupSizeLimitJson = File.ReadAllText(backupSizeLimitFilePath);
-            double backupSizeLimit = JsonSerializer.Deserialize<double>(backupSizeLimitJson);
-            backupSizeLimitNumericUpDown.Value = (decimal)backupSizeLimit;
-        }
-
-        try
-        {
-            string sourcePathsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "sourcePaths.json");
-            if (File.Exists(sourcePathsFilePath))
-            {
-                string sourcePathsJson = File.ReadAllText(sourcePathsFilePath);
-                List<string> sourcePaths = JsonSerializer.Deserialize<List<string>>(sourcePathsJson);
-                foreach (string sourcePath in sourcePaths)
-                {
-                    sourceListBox.Items.Add(sourcePath);
-                }
-                //MessageBox.Show($"Source paths loaded from {sourcePathsFilePath}");
-            }
-
-            string destinationPathFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "destinationPath.json");
-            if (File.Exists(destinationPathFilePath))
-            {
-                string destinationPath = File.ReadAllText(destinationPathFilePath);
-                destinationTextBox.Text = destinationPath;
-                //MessageBox.Show($"Destination path loaded from {destinationPathFilePath}");
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Error while loading paths: {ex}");
-        }
-    }
-
-    private void AddSourceButton_Click(object? Sender, EventArgs e)
-    {
-        using (var fbd = new FolderBrowserDialog())
-        {
-            DialogResult result = fbd.ShowDialog();
-
-            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
-            {
-                sourceListBox.Items.Add(fbd.SelectedPath);
-            }
-        }
-    }
-
-    private void RemoveSourceButton_Click(object? Sender, EventArgs e)
-    {
-        if (sourceListBox.SelectedItem != null)
-        {
-            sourceListBox.Items.Remove(sourceListBox.SelectedItem);
-        }
-    }
-
-    private void SelectDestinationButton_Click(object? Sender, EventArgs e)
-    {
-        using (var fbd = new FolderBrowserDialog())
-        {
-            DialogResult result = fbd.ShowDialog();
-
-            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
-            {
-                destinationTextBox.Text = fbd.SelectedPath;
-            }
-        }
-    }
-
-    private void SettingsForm_FormClosing(object Sender, FormClosingEventArgs e)
-    {
-        Form1.maxBackupSizeInGB = (double)backupSizeLimitNumericUpDown.Value;
-        string backupSizeLimitFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backupSizeLimit.json");
-        double backupSizeLimit = (double)backupSizeLimitNumericUpDown.Value;
-        string backupSizeLimitJson = JsonSerializer.Serialize(backupSizeLimit);
-        File.WriteAllText(backupSizeLimitFilePath, backupSizeLimitJson);
-
-        try
-        {
-            List<string> sourcePaths = new List<string>();
-            foreach (var item in sourceListBox.Items)
-            {
-                sourcePaths.Add(item.ToString());
-            }
-            string sourcePathsJson = JsonSerializer.Serialize(sourcePaths);
-            string sourcePathsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "sourcePaths.json");
-            File.WriteAllText(sourcePathsFilePath, sourcePathsJson);
-            //MessageBox.Show($"Source paths saved to {sourcePathsFilePath}");
-
-            string destinationPath = destinationTextBox.Text;
-            string destinationPathFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "destinationPath.json");
-            File.WriteAllText(destinationPathFilePath, destinationPath);
-            //MessageBox.Show($"Destination path saved to {destinationPathFilePath}");
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Error while saving paths: {ex}");
-        }
-    }
-
-
-}
-public partial class ProgressForm : Form
-{
-    private ProgressBar progressBar;
-    private Label titleLabel;
-    private Label progressLabel;
-
-    public ProgressForm()
-    {
-        this.FormBorderStyle = FormBorderStyle.None;
-        this.BackColor = Color.LimeGreen;
-        this.TransparencyKey = Color.LimeGreen;
-        this.Size = new Size(200, 80);
-        this.StartPosition = FormStartPosition.Manual;
-        this.Location = new Point(Screen.PrimaryScreen.Bounds.Width - this.Width - 10, Screen.PrimaryScreen.Bounds.Height - this.Height - 60);
-        
-        Panel panel = new Panel();
-        panel.Dock = DockStyle.Fill;
-        panel.Padding = new Padding(10);
-        panel.BackColor = Color.Black;
-        this.Controls.Add(panel);
-
-        titleLabel = new Label();
-        titleLabel.Dock = DockStyle.Top;
-        titleLabel.ForeColor = Color.White;
-        titleLabel.Text = "Sauvegarde en cours";
-        titleLabel.TextAlign = ContentAlignment.MiddleCenter;
-        panel.Controls.Add(titleLabel);
-
-        progressBar = new ProgressBar();
-        progressBar.Dock = DockStyle.Fill;
-        progressBar.Minimum = 0;
-        progressBar.Maximum = 100;
-        progressBar.Style = ProgressBarStyle.Continuous;
-        progressBar.ForeColor = Color.LimeGreen;
-        progressBar.BackColor = Color.DarkGray;
-        panel.Controls.Add(progressBar);
-
-        progressLabel = new Label();
-        progressLabel.Dock = DockStyle.Bottom;
-        progressLabel.ForeColor = Color.White;
-        progressLabel.TextAlign = ContentAlignment.MiddleCenter;
-        panel.Controls.Add(progressLabel);
-    }
-
-    public void UpdateProgress(int percent, string text)
-    {
-        progressBar.Value = percent;
-        progressLabel.Text = text;
-    }
-}
-
