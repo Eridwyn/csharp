@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.ComponentModel; 
 
+//TODO meilleurs gestions de fichiers de sauvegardes
 public partial class Form1 : Form
 {
     private NotifyIcon notifyIcon;
