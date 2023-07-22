@@ -7,7 +7,6 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.ComponentModel; 
 
-//TODO Ajouter un bouton pour voir les logs directement
 public class Config
 {
     public double BackupSizeLimit { get; set; }
@@ -24,6 +23,7 @@ public partial class Form1 : Form
     private ToolStripMenuItem settingsToolStripMenuItem;
     private ToolStripMenuItem backupToolStripMenuItem;
     private System.Timers.Timer backupTimer;
+    private ToolStripMenuItem ToolStripMenuLogItem;
     public static double maxBackupSizeInGB = 20.0;  // Limite de la sauvegarde à 20 Go
 
 
@@ -36,6 +36,10 @@ public partial class Form1 : Form
         exitToolStripMenuItem = new ToolStripMenuItem();
         settingsToolStripMenuItem = new ToolStripMenuItem();
         backupToolStripMenuItem = new ToolStripMenuItem();
+        ToolStripMenuLogItem = new ToolStripMenuItem();
+
+        ToolStripMenuLogItem.Text = "Afficher les logs";
+        ToolStripMenuLogItem.Click += new EventHandler(ShowLogButton_Click);
 
         exitToolStripMenuItem.Text = "Quitter";
         exitToolStripMenuItem.Click += new EventHandler(ExitToolStripMenuItem_Click);
@@ -48,7 +52,9 @@ public partial class Form1 : Form
 
         contextMenuStrip.Items.Add(backupToolStripMenuItem);
         contextMenuStrip.Items.Add(settingsToolStripMenuItem);
+        contextMenuStrip.Items.Add(ToolStripMenuLogItem);
         contextMenuStrip.Items.Add(exitToolStripMenuItem);
+        
 
         notifyIcon.ContextMenuStrip = contextMenuStrip;
         notifyIcon.Visible = true;
@@ -76,6 +82,52 @@ public partial class Form1 : Form
 
         this.WindowState = FormWindowState.Minimized;
         this.ShowInTaskbar = false;
+    }
+    private void ShowLogButton_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            string logFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".savetool", "logfile.txt");
+
+            if (File.Exists(logFilePath))
+            {
+                string logContent;
+
+                try
+                {
+                    using var stream = new FileStream(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    using var reader = new StreamReader(stream);
+                    logContent = reader.ReadToEnd();
+                }
+                catch (IOException ex)
+                {
+                    logContent = "Erreur lors de la lecture du fichier de log: " + ex.Message;
+                }
+
+                Form logForm = new Form();
+                TextBox logTextBox = new TextBox();
+
+                logTextBox.Multiline = true;
+                logTextBox.Dock = DockStyle.Fill;
+                logTextBox.ScrollBars = ScrollBars.Vertical;
+                logTextBox.Width = 600;
+                logTextBox.Height = 400;
+
+                logTextBox.Text = logContent;
+
+                logForm.Controls.Add(logTextBox);
+                logForm.Show();
+
+            }
+            else
+            {
+                MessageBox.Show("Fichier de log non trouvé.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[{DateTime.Now}]: Exception caught: " + ex.Message);
+        }
     }
 
     private void OnBackupTimerElapsed(object? Sender, System.Timers.ElapsedEventArgs e)

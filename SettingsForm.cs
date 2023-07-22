@@ -107,6 +107,7 @@ public partial class SettingsForm : Form
         {
             // Handle the case where config is null
             Trace.WriteLine($"[{DateTime.Now}]: Configuration file could not be parsed.");
+            Trace.Flush();
         }
     }
     }
