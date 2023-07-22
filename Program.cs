@@ -15,7 +15,7 @@ static class Program
         Trace.Listeners.Add(new TextWriterTraceListener(logFilePath));
         Trace.AutoFlush = true;
         ApplicationConfiguration.Initialize();
-        Trace.WriteLine("Ouverture de l'application.");
+        Trace.WriteLine($"[{DateTime.Now}]: Ouverture de l'application.");
         Application.Run(new Form1());
     }    
 }
