@@ -7,13 +7,13 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.ComponentModel; 
 
-//TODO meilleurs gestions de fichiers de sauvegardes
+//TODO Ajouter un bouton pour voir les logs directement
 public class Config
 {
     public double BackupSizeLimit { get; set; }
     public double BackupInterval { get; set; }
-    public List<string> SourcePaths { get; set; }
-    public string DestinationPath { get; set; }
+    public required List<string> SourcePaths { get; set; }
+    public required string DestinationPath { get; set; }
 }
 
 public partial class Form1 : Form
@@ -61,10 +61,17 @@ public partial class Form1 : Form
         {
             string configJson = File.ReadAllText(configFilePath);
             var config = JsonSerializer.Deserialize<Config>(configJson);
-            backupTimer.Interval = config.BackupInterval * 3600000;  // Convert hours to milliseconds
-            maxBackupSizeInGB = config.BackupSizeLimit;
-        }
+            if (config != null)
+            {
+                backupTimer.Interval = config.BackupInterval * 3600000;  // Convert hours to milliseconds
+                maxBackupSizeInGB = config.BackupSizeLimit;
+            }
+            else
+            {
+                Trace.WriteLine($"[{DateTime.Now}]: Problemes de configuration null");
 
+            }
+        }
         backupTimer.Start();
 
         this.WindowState = FormWindowState.Minimized;
@@ -80,6 +87,7 @@ public partial class Form1 : Form
     }
     private void ExitToolStripMenuItem_Click(object? Sender, EventArgs e)
     {
+        Trace.WriteLine($"[{DateTime.Now}]: Application fermée.");
         notifyIcon.Visible = false;
         Application.Exit();
     }
@@ -90,8 +98,9 @@ public partial class Form1 : Form
         settingsForm.Show();
     }
 
-    private void BackupToolStripMenuItem_Click(object? Sender, EventArgs e)
+    private void BackupToolStripMenuItem_Click(object? Sender, EventArgs? e)
     {
+        Trace.WriteLine($"[{DateTime.Now}]: Initiallisation de la Sauvegarde.");
         ProgressForm progressForm = new ProgressForm();
         progressForm.Show();
 
@@ -107,12 +116,19 @@ public partial class Form1 : Form
                 string configJson = File.ReadAllText(configFilePath);
                 var config = JsonSerializer.Deserialize<Config>(configJson);
 
-                int totalFiles = config.SourcePaths.Sum(path => Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories).Count());
-
-                int processedFiles = 0;
-                foreach (string sourcePath in config.SourcePaths)
+                if (config != null)
                 {
-                    PerformDifferentialBackup(sourcePath, config.DestinationPath, backupWorker, totalFiles, ref processedFiles);
+                    int totalFiles = config.SourcePaths.Sum(path => Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories).Count());
+
+                    int processedFiles = 0;
+                    foreach (string sourcePath in config.SourcePaths)
+                    {
+                        PerformDifferentialBackup(sourcePath, config.DestinationPath, backupWorker, totalFiles, ref processedFiles);
+                    }
+                }
+                else
+                {
+                    Trace.WriteLine($"[{DateTime.Now}]: Impossible de verifier les fichiers");
                 }
             }
         };
@@ -126,6 +142,8 @@ public partial class Form1 : Form
         {
             progressForm.Close();
             notifyIcon.ShowBalloonTip(3000, "Sauvegarde terminée", "Sauvegarde effectuée avec succès.", ToolTipIcon.Info);
+            Trace.WriteLine($"[{DateTime.Now}]: Sauvegarde effectuée avec succès.");
+            
         };
 
         backupWorker.RunWorkerAsync();
@@ -133,60 +151,97 @@ public partial class Form1 : Form
 
     private void PerformDifferentialBackup(string sourceDirectory, string destinationDirectory, BackgroundWorker backupWorker, int totalFiles, ref int processedFiles)
     {
-        DriveInfo drive = new DriveInfo(Path.GetPathRoot(destinationDirectory));
-        
-        double freeSpaceInGB = drive.AvailableFreeSpace / Math.Pow(1024, 3);
-
-        // Get the total size of source directory
-        double sourceSizeInGB = GetDirectorySizeInGB(sourceDirectory);
-
-        if (freeSpaceInGB < sourceSizeInGB || sourceSizeInGB > maxBackupSizeInGB)
+        try
         {
-            MessageBox.Show("Espace disque insuffisant pour la sauvegarde. Veuillez libérer de l'espace et réessayer.");
-            return;
-        }
 
-        string lastFullBackupFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "lastFullBackup.txt");
-        DateTime lastFullBackupTime;
-
-        if (File.Exists(lastFullBackupFilePath))
-        {
-            string lastFullBackupTimeString = File.ReadAllText(lastFullBackupFilePath);
-            lastFullBackupTime = DateTime.Parse(lastFullBackupTimeString);
-        }
-        else
-        {
-            lastFullBackupTime = DateTime.MinValue;
-        }
-
-        string userName = Environment.UserName;
-        destinationDirectory = Path.Combine(destinationDirectory, userName, new DirectoryInfo(sourceDirectory).Name);
-
-        foreach (var sourceFilePath in Directory.EnumerateFiles(sourceDirectory, "*", SearchOption.AllDirectories))
-        {
-            string relativePath = sourceFilePath.Substring(sourceDirectory.Length + 1);
-            string destinationFilePath = Path.Combine(destinationDirectory, relativePath);
-
-            if (!File.Exists(destinationFilePath))
+            string? driveName = Path.GetPathRoot(destinationDirectory);
+    
+            if (string.IsNullOrEmpty(driveName))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(destinationFilePath));
-                File.Copy(sourceFilePath, destinationFilePath);
+                // Handle the case where driveName is null or empty
+                Trace.WriteLine($"[{DateTime.Now}]: Destination est null ou vide.");
+                return;
+            }
+            DriveInfo drive = new DriveInfo(driveName!);
+            
+            double freeSpaceInGB = drive.AvailableFreeSpace / Math.Pow(1024, 3);
+
+            // Get the total size of source directory
+            double sourceSizeInGB = GetDirectorySizeInGB(sourceDirectory);
+
+            if (freeSpaceInGB < sourceSizeInGB || sourceSizeInGB > maxBackupSizeInGB)
+            {
+                MessageBox.Show("Espace disque insuffisant pour la sauvegarde. Veuillez libérer de l'espace et réessayer.");
+                Trace.WriteLine($"[{DateTime.Now}]: Espace disque insuffisant pour la sauvegarde. Veuillez libérer de l'espace et réessayer.");
+                return;
+            }
+
+            string lastFullBackupFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "lastFullBackup.txt");
+            DateTime lastFullBackupTime;
+
+            if (File.Exists(lastFullBackupFilePath))
+            {
+                string lastFullBackupTimeString = File.ReadAllText(lastFullBackupFilePath);
+                lastFullBackupTime = DateTime.Parse(lastFullBackupTimeString);
             }
             else
             {
-                FileInfo sourceFileInfo = new FileInfo(sourceFilePath);
-                if (sourceFileInfo.LastWriteTime > lastFullBackupTime)
-                {
-                    File.Copy(sourceFilePath, destinationFilePath, overwrite: true);
-                }
+                lastFullBackupTime = DateTime.MinValue;
             }
 
-            processedFiles++;
-            int progressPercentage = processedFiles * 100 / totalFiles;
-            backupWorker.ReportProgress(progressPercentage);
-        }
+            string userName = Environment.UserName;
+            destinationDirectory = Path.Combine(destinationDirectory, userName, new DirectoryInfo(sourceDirectory).Name);
 
-        File.WriteAllText(lastFullBackupFilePath, DateTime.Now.ToString());
+            foreach (var sourceFilePath in Directory.EnumerateFiles(sourceDirectory, "*", SearchOption.AllDirectories))
+            {
+                string relativePath = sourceFilePath.Substring(sourceDirectory.Length + 1);
+                string destinationFilePath = Path.Combine(destinationDirectory, relativePath);
+
+                string? destinationDirectoryPath = Path.GetDirectoryName(destinationFilePath);
+                if (string.IsNullOrEmpty(destinationDirectoryPath))
+                {
+                    // Handle the case where destinationDirectoryPath is null or empty
+                    Trace.WriteLine($"[{DateTime.Now}]: Impossible determiner le chemin de destination.");
+                    continue;
+                }
+
+
+                if (!File.Exists(destinationFilePath))
+                {
+                    Directory.CreateDirectory(destinationDirectoryPath);
+                    File.Copy(sourceFilePath, destinationFilePath);
+                }
+                else
+                {
+                    FileInfo sourceFileInfo = new FileInfo(sourceFilePath);
+                    if (sourceFileInfo.LastWriteTime > lastFullBackupTime)
+                    {
+                        File.Copy(sourceFilePath, destinationFilePath, overwrite: true);
+                    }
+                }
+
+                processedFiles++;
+                int progressPercentage = processedFiles * 100 / totalFiles;
+                backupWorker.ReportProgress(progressPercentage);
+            }
+
+            File.WriteAllText(lastFullBackupFilePath, DateTime.Now.ToString());
+        }
+        catch (IOException ex)
+        {
+            Trace.WriteLine($"[{DateTime.Now}]: I/O Error during backup: {ex.Message}");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            // Handle permission errors
+            Trace.WriteLine($"[{DateTime.Now}]: Permission Error during backup: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            // Handle any other errors
+           Trace.WriteLine($"[{DateTime.Now}]: Unexpected error during backup: {ex.Message}");
+
+        }
     }
 
     private double GetDirectorySizeInGB(string directoryPath)

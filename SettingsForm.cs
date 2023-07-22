@@ -1,5 +1,6 @@
 #nullable enable
 using System.Text.Json;
+using System.Diagnostics;
 public partial class SettingsForm : Form
 {
     private TabControl tabControl;
@@ -90,6 +91,8 @@ public partial class SettingsForm : Form
             string configJson = File.ReadAllText(configFilePath);
             var config = JsonSerializer.Deserialize<Config>(configJson);
             
+        if (config != null)
+        {
             backupIntervalNumericUpDown.Value = (decimal)config.BackupInterval;
             backupSizeLimitNumericUpDown.Value = (decimal)config.BackupSizeLimit;
             
@@ -100,6 +103,12 @@ public partial class SettingsForm : Form
 
             destinationTextBox.Text = config.DestinationPath;
         }
+        else
+        {
+            // Handle the case where config is null
+            Trace.WriteLine($"[{DateTime.Now}]: Configuration file could not be parsed.");
+        }
+    }
     }
 
     private void AddSourceButton_Click(object? Sender, EventArgs e)
@@ -154,8 +163,16 @@ public partial class SettingsForm : Form
         };
         foreach (var item in sourceListBox.Items)
         {
-            config.SourcePaths.Add(item.ToString());
+            if (item != null)
+            {
+                config.SourcePaths.Add(item.ToString() ?? "");
+            }
+            else
+            {
+                Trace.WriteLine($"[{DateTime.Now}]: Probleme impossible a realiser");
+            }
         }
+
         string configJson = JsonSerializer.Serialize(config);
         File.WriteAllText(configFilePath, configJson);
     }

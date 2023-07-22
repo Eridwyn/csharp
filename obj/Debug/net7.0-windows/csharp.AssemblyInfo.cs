@@ -10,12 +10,12 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("csharp")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("SaveTool")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
-[assembly: System.Reflection.AssemblyProductAttribute("csharp")]
-[assembly: System.Reflection.AssemblyTitleAttribute("csharp")]
+[assembly: System.Reflection.AssemblyProductAttribute("SaveTool")]
+[assembly: System.Reflection.AssemblyTitleAttribute("SaveTool")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 [assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
 [assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]
