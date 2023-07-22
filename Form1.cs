@@ -8,6 +8,14 @@ using System.Diagnostics;
 using System.ComponentModel; 
 
 //TODO meilleurs gestions de fichiers de sauvegardes
+public class Config
+{
+    public double BackupSizeLimit { get; set; }
+    public double BackupInterval { get; set; }
+    public List<string> SourcePaths { get; set; }
+    public string DestinationPath { get; set; }
+}
+
 public partial class Form1 : Form
 {
     private NotifyIcon notifyIcon;
@@ -16,7 +24,8 @@ public partial class Form1 : Form
     private ToolStripMenuItem settingsToolStripMenuItem;
     private ToolStripMenuItem backupToolStripMenuItem;
     private System.Timers.Timer backupTimer;
-    public static double maxBackupSizeInGB = 10.0;  // Limite de la sauvegarde à 10 Go
+    public static double maxBackupSizeInGB = 20.0;  // Limite de la sauvegarde à 20 Go
+
 
     public Form1()
     {
@@ -45,13 +54,15 @@ public partial class Form1 : Form
         notifyIcon.Visible = true;
 
         backupTimer = new System.Timers.Timer();
+        backupTimer.Elapsed += OnBackupTimerElapsed;
 
-        string backupIntervalFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backupInterval.json");
-        if (File.Exists(backupIntervalFilePath))
+        string configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".savetool", "config.json");
+        if (File.Exists(configFilePath))
         {
-            string backupIntervalJson = File.ReadAllText(backupIntervalFilePath);
-            double backupInterval = JsonSerializer.Deserialize<double>(backupIntervalJson);
-            backupTimer.Interval = backupInterval * 3600000;  // Convertir les heures en millisecondes
+            string configJson = File.ReadAllText(configFilePath);
+            var config = JsonSerializer.Deserialize<Config>(configJson);
+            backupTimer.Interval = config.BackupInterval * 3600000;  // Convert hours to milliseconds
+            maxBackupSizeInGB = config.BackupSizeLimit;
         }
 
         backupTimer.Start();
@@ -62,7 +73,10 @@ public partial class Form1 : Form
 
     private void OnBackupTimerElapsed(object? Sender, System.Timers.ElapsedEventArgs e)
     {
-        BackupToolStripMenuItem_Click(null, null);
+        this.Invoke((MethodInvoker)delegate
+        {
+            BackupToolStripMenuItem_Click(null, null);
+        });
     }
     private void ExitToolStripMenuItem_Click(object? Sender, EventArgs e)
     {
@@ -86,21 +100,19 @@ public partial class Form1 : Form
 
         backupWorker.DoWork += (s, args) =>
         {
-            string sourcePathsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "sourcePaths.json");
-            string destinationPathFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "destinationPath.json");
+            string configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".savetool", "config.json");
 
-            if (File.Exists(sourcePathsFilePath) && File.Exists(destinationPathFilePath))
+            if (File.Exists(configFilePath))
             {
-                string sourcePathsJson = File.ReadAllText(sourcePathsFilePath);
-                List<string> sourcePaths = JsonSerializer.Deserialize<List<string>>(sourcePathsJson);
-                string destinationPath = File.ReadAllText(destinationPathFilePath);
+                string configJson = File.ReadAllText(configFilePath);
+                var config = JsonSerializer.Deserialize<Config>(configJson);
 
-                int totalFiles = sourcePaths.Sum(path => Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories).Count());
+                int totalFiles = config.SourcePaths.Sum(path => Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories).Count());
 
                 int processedFiles = 0;
-                foreach (string sourcePath in sourcePaths)
+                foreach (string sourcePath in config.SourcePaths)
                 {
-                    PerformDifferentialBackup(sourcePath, destinationPath, backupWorker, totalFiles, ref processedFiles);
+                    PerformDifferentialBackup(sourcePath, config.DestinationPath, backupWorker, totalFiles, ref processedFiles);
                 }
             }
         };

@@ -84,46 +84,21 @@ public partial class SettingsForm : Form
         backupIntervalNumericUpDown.Location = new System.Drawing.Point(20, 170); // Changez ces valeurs pour positionner le NumericUpDown à l'endroit souhaité
         destinationTabPage.Controls.Add(backupIntervalNumericUpDown);
 
-        string backupIntervalFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backupInterval.json");
-        if (File.Exists(backupIntervalFilePath))
+        string configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".savetool", "config.json");
+        if (File.Exists(configFilePath))
         {
-            string backupIntervalJson = File.ReadAllText(backupIntervalFilePath);
-            double backupInterval = JsonSerializer.Deserialize<double>(backupIntervalJson);
-            backupIntervalNumericUpDown.Value = (decimal)backupInterval;
-        }
-
-
-        string backupSizeLimitFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backupSizeLimit.json");
-        if (File.Exists(backupSizeLimitFilePath))
-        {
-            string backupSizeLimitJson = File.ReadAllText(backupSizeLimitFilePath);
-            double backupSizeLimit = JsonSerializer.Deserialize<double>(backupSizeLimitJson);
-            backupSizeLimitNumericUpDown.Value = (decimal)backupSizeLimit;
-        }
-
-        try
-        {
-            string sourcePathsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "sourcePaths.json");
-            if (File.Exists(sourcePathsFilePath))
+            string configJson = File.ReadAllText(configFilePath);
+            var config = JsonSerializer.Deserialize<Config>(configJson);
+            
+            backupIntervalNumericUpDown.Value = (decimal)config.BackupInterval;
+            backupSizeLimitNumericUpDown.Value = (decimal)config.BackupSizeLimit;
+            
+            foreach (string sourcePath in config.SourcePaths)
             {
-                string sourcePathsJson = File.ReadAllText(sourcePathsFilePath);
-                List<string> sourcePaths = JsonSerializer.Deserialize<List<string>>(sourcePathsJson);
-                foreach (string sourcePath in sourcePaths)
-                {
-                    sourceListBox.Items.Add(sourcePath);
-                }
+                sourceListBox.Items.Add(sourcePath);
             }
 
-            string destinationPathFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "destinationPath.json");
-            if (File.Exists(destinationPathFilePath))
-            {
-                string destinationPath = File.ReadAllText(destinationPathFilePath);
-                destinationTextBox.Text = destinationPath;
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Erreur lors du chargement des chemins: {ex}");
+            destinationTextBox.Text = config.DestinationPath;
         }
     }
 
@@ -163,36 +138,26 @@ public partial class SettingsForm : Form
 
     private void SettingsForm_FormClosing(object? Sender, FormClosingEventArgs e)
     {
-        Form1.maxBackupSizeInGB = (double)backupSizeLimitNumericUpDown.Value;
-        string backupSizeLimitFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backupSizeLimit.json");
-        double backupSizeLimit = (double)backupSizeLimitNumericUpDown.Value;
-        string backupSizeLimitJson = JsonSerializer.Serialize(backupSizeLimit);
-        File.WriteAllText(backupSizeLimitFilePath, backupSizeLimitJson);
-
-        string backupIntervalFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "backupInterval.json");
-        double backupInterval = (double)backupIntervalNumericUpDown.Value;
-        string backupIntervalJson = JsonSerializer.Serialize(backupInterval);
-        File.WriteAllText(backupIntervalFilePath, backupIntervalJson);
-
-
-        try
+        string configDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".savetool");
+        if (!Directory.Exists(configDirectoryPath))
         {
-            List<string> sourcePaths = new List<string>();
-            foreach (var item in sourceListBox.Items)
-            {
-                sourcePaths.Add(item.ToString());
-            }
-            string sourcePathsJson = JsonSerializer.Serialize(sourcePaths);
-            string sourcePathsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "sourcePaths.json");
-            File.WriteAllText(sourcePathsFilePath, sourcePathsJson);
+            Directory.CreateDirectory(configDirectoryPath);
+        }
 
-            string destinationPath = destinationTextBox.Text;
-            string destinationPathFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "destinationPath.json");
-            File.WriteAllText(destinationPathFilePath, destinationPath);
-        }
-        catch (Exception ex)
+        string configFilePath = Path.Combine(configDirectoryPath, "config.json");
+        var config = new Config
         {
-            MessageBox.Show($"Erreur lors de la sauvegarde des chemins: {ex}");
+            BackupSizeLimit = (double)backupSizeLimitNumericUpDown.Value,
+            BackupInterval = (double)backupIntervalNumericUpDown.Value,
+            SourcePaths = new List<string>(),
+            DestinationPath = destinationTextBox.Text
+        };
+        foreach (var item in sourceListBox.Items)
+        {
+            config.SourcePaths.Add(item.ToString());
         }
+        string configJson = JsonSerializer.Serialize(config);
+        File.WriteAllText(configFilePath, configJson);
     }
+
 }
