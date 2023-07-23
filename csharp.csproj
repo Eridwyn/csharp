@@ -7,6 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>SaveTool</AssemblyName>
+    <ApplicationIcon>maing.ico</ApplicationIcon>
   </PropertyGroup>
 
 </Project>
