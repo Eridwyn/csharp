@@ -91,25 +91,32 @@ public partial class SettingsForm : Form
             string configJson = File.ReadAllText(configFilePath);
             var config = JsonSerializer.Deserialize<Config>(configJson);
             
-        if (config != null)
-        {
-            backupIntervalNumericUpDown.Value = (decimal)config.BackupInterval;
-            backupSizeLimitNumericUpDown.Value = (decimal)config.BackupSizeLimit;
-            
-            foreach (string sourcePath in config.SourcePaths)
+            if (config != null)
             {
-                sourceListBox.Items.Add(sourcePath);
+                backupIntervalNumericUpDown.Value = (decimal)config.BackupInterval;
+                backupSizeLimitNumericUpDown.Value = (decimal)config.BackupSizeLimit;
+            
+                foreach (string sourcePath in config.SourcePaths)
+                {
+                    sourceListBox.Items.Add(sourcePath);
+                }
+                destinationTextBox.Text = config.DestinationPath;
             }
-
-            destinationTextBox.Text = config.DestinationPath;
+            else
+            {
+                // Handle the case where config is null
+                Trace.WriteLine($"[{DateTime.Now}]: Configuration file could not be parsed.");
+                Trace.Flush();
+                backupIntervalNumericUpDown.Value = 1; // Default interval of 1 hour
+                backupSizeLimitNumericUpDown.Value = 20; 
+            }
         }
         else
         {
-            // Handle the case where config is null
-            Trace.WriteLine($"[{DateTime.Now}]: Configuration file could not be parsed.");
-            Trace.Flush();
+            // Set default values for the controls
+            backupIntervalNumericUpDown.Value = 1; // Default interval of 1 hour
+            backupSizeLimitNumericUpDown.Value = 20; // Default backup size limit of 20 GB
         }
-    }
     }
 
     private void AddSourceButton_Click(object? Sender, EventArgs e)

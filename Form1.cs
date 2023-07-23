@@ -48,10 +48,13 @@ public partial class Form1 : Form
     private System.Timers.Timer backupTimer;
     private ToolStripMenuItem ToolStripMenuLogItem;
     public static double maxBackupSizeInGB = 20.0;  // Limite de la sauvegarde à 20 Go
+    private BackgroundWorker backupWorker = new BackgroundWorker();
 
 
     public Form1()
     {
+        CreateDefaultConfigFileIfNotExists();
+        
         notifyIcon = new NotifyIcon();
         notifyIcon.Icon = new System.Drawing.Icon("maing.ico"); // Set the application icon
         notifyIcon.Text = "Logiciel de sauvegarde";
@@ -193,11 +196,16 @@ public partial class Form1 : Form
 
     private void BackupToolStripMenuItem_Click(object? Sender, EventArgs? e)
     {
+        if (backupWorker.IsBusy)
+        {
+            // Une sauvegarde est déjà en cours, ne rien faire.
+            return;
+        }
         Trace.WriteLine($"[{DateTime.Now}]: Initiallisation de la Sauvegarde.");
         ProgressForm progressForm = new ProgressForm();
         progressForm.Show();
 
-        BackgroundWorker backupWorker = new BackgroundWorker();
+        backupWorker = new BackgroundWorker();
         backupWorker.WorkerReportsProgress = true;
 
         backupWorker.DoWork += (s, args) =>
@@ -236,10 +244,15 @@ public partial class Form1 : Form
             progressForm.Close();
             notifyIcon.ShowBalloonTip(3000, "Sauvegarde terminée", "Sauvegarde effectuée avec succès.", ToolTipIcon.Info);
             Trace.WriteLine($"[{DateTime.Now}]: Sauvegarde effectuée avec succès.");
-            
+
+            // Réactiver le timer pour la sauvegarde automatique
+            backupTimer.Start();
         };
 
         backupWorker.RunWorkerAsync();
+
+        // Arrêter le timer pour la sauvegarde automatique pendant la sauvegarde manuelle
+        backupTimer.Stop();
     }
 
     private void PerformDifferentialBackup(string sourceDirectory, string destinationDirectory, BackgroundWorker backupWorker, int totalFiles, ref int processedFiles)
@@ -335,4 +348,29 @@ public partial class Form1 : Form
         long sizeInBytes = di.EnumerateFiles("*", SearchOption.AllDirectories).Sum(fi => fi.Length);
         return sizeInBytes / Math.Pow(1024, 3);
     }
+    private void CreateDefaultConfigFileIfNotExists()
+{
+    string configDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".savetool");
+    if (!Directory.Exists(configDirectoryPath))
+    {
+        Directory.CreateDirectory(configDirectoryPath);
+    }
+
+    string configFilePath = Path.Combine(configDirectoryPath, "config.json");
+    if (!File.Exists(configFilePath))
+    {
+        // Le fichier de configuration n'existe pas, créons-en un avec les valeurs par défaut
+        var defaultConfig = new Config
+        {
+            BackupSizeLimit = 20.0, // Default backup size limit of 20 GB
+            BackupInterval = 1.0,   // Default backup interval of 1 hour
+            SourcePaths = new List<string>(),
+            DestinationPath = ""    // Default destination path is empty
+        };
+
+        string configJson = JsonSerializer.Serialize(defaultConfig);
+        File.WriteAllText(configFilePath, configJson);
+    }
+}
+
 }

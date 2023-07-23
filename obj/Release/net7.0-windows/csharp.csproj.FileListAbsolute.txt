@@ -1,0 +1,15 @@
+C:\Users\Eridw\source\repos\C#\bin\Release\net7.0-windows\SaveTool.exe
+C:\Users\Eridw\source\repos\C#\bin\Release\net7.0-windows\SaveTool.deps.json
+C:\Users\Eridw\source\repos\C#\bin\Release\net7.0-windows\SaveTool.runtimeconfig.json
+C:\Users\Eridw\source\repos\C#\bin\Release\net7.0-windows\SaveTool.dll
+C:\Users\Eridw\source\repos\C#\bin\Release\net7.0-windows\SaveTool.pdb
+C:\Users\Eridw\source\repos\C#\obj\Release\net7.0-windows\csharp.csproj.AssemblyReference.cache
+C:\Users\Eridw\source\repos\C#\obj\Release\net7.0-windows\csharp.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Eridw\source\repos\C#\obj\Release\net7.0-windows\csharp.AssemblyInfoInputs.cache
+C:\Users\Eridw\source\repos\C#\obj\Release\net7.0-windows\csharp.AssemblyInfo.cs
+C:\Users\Eridw\source\repos\C#\obj\Release\net7.0-windows\csharp.csproj.CoreCompileInputs.cache
+C:\Users\Eridw\source\repos\C#\obj\Release\net7.0-windows\SaveTool.dll
+C:\Users\Eridw\source\repos\C#\obj\Release\net7.0-windows\refint\SaveTool.dll
+C:\Users\Eridw\source\repos\C#\obj\Release\net7.0-windows\SaveTool.pdb
+C:\Users\Eridw\source\repos\C#\obj\Release\net7.0-windows\csharp.genruntimeconfig.cache
+C:\Users\Eridw\source\repos\C#\obj\Release\net7.0-windows\ref\SaveTool.dll

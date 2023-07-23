@@ -1,0 +1,5 @@
+C:\Users\Eridw\source\repos\C#\bin\Release\net7.0-windows\publish\SaveTool.exe
+C:\Users\Eridw\source\repos\C#\bin\Release\net7.0-windows\publish\SaveTool.dll
+C:\Users\Eridw\source\repos\C#\bin\Release\net7.0-windows\publish\SaveTool.deps.json
+C:\Users\Eridw\source\repos\C#\bin\Release\net7.0-windows\publish\SaveTool.runtimeconfig.json
+C:\Users\Eridw\source\repos\C#\bin\Release\net7.0-windows\publish\SaveTool.pdb
