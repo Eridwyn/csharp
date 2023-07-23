@@ -244,34 +244,26 @@ public partial class Form1 : Form
             string userName = Environment.UserName;
             destinationDirectory = Path.Combine(destinationDirectory, userName, new DirectoryInfo(sourceDirectory).Name);
 
-            foreach (var sourceFilePath in Directory.EnumerateFiles(sourceDirectory, "*", SearchOption.AllDirectories))
+             foreach (var sourceFilePath in Directory.EnumerateFiles(sourceDirectory, "*", SearchOption.AllDirectories))
             {
                 string relativePath = sourceFilePath.Substring(sourceDirectory.Length + 1);
                 string destinationFilePath = Path.Combine(destinationDirectory, relativePath);
+                FileInfo sourceFileInfo = new FileInfo(sourceFilePath);
+                FileInfo destinationFileInfo = new FileInfo(destinationFilePath);
 
-                string? destinationDirectoryPath = Path.GetDirectoryName(destinationFilePath);
-                if (string.IsNullOrEmpty(destinationDirectoryPath))
+                if (!destinationFileInfo.Exists || sourceFileInfo.LastWriteTime > destinationFileInfo.LastWriteTime)
                 {
-                    // Handle the case where destinationDirectoryPath is null or empty
-                    Trace.WriteLine($"[{DateTime.Now}]: Impossible determiner le chemin de destination.");
-                    continue;
-                }
-
-
-                if (!File.Exists(destinationFilePath))
-                {
-                    Directory.CreateDirectory(destinationDirectoryPath);
-                    File.Copy(sourceFilePath, destinationFilePath);
-                }
-                else
-                {
-                    FileInfo sourceFileInfo = new FileInfo(sourceFilePath);
-                    if (sourceFileInfo.LastWriteTime > lastFullBackupTime)
+                    string? destinationDirectoryPath = Path.GetDirectoryName(destinationFilePath);
+                    if (!string.IsNullOrEmpty(destinationDirectoryPath))
                     {
+                        Directory.CreateDirectory(destinationDirectoryPath);
                         File.Copy(sourceFilePath, destinationFilePath, overwrite: true);
                     }
+                    else
+                    {
+                        Trace.WriteLine($"[{DateTime.Now}]: Invalid directory path for destination file: {destinationFilePath}");
+                    }
                 }
-
                 processedFiles++;
                 int progressPercentage = processedFiles * 100 / totalFiles;
                 backupWorker.ReportProgress(progressPercentage);
