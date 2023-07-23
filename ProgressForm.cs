@@ -35,6 +35,7 @@ public partial class ProgressForm : Form
         this.BackColor = Color.FromArgb(31, 102, 52);
         this.TransparencyKey = Color.FromArgb(31, 102, 52);
         this.Size = new Size(200, 80);
+        this.Icon = new Icon("maing.ico");
         this.StartPosition = FormStartPosition.Manual;
         this.Location = new Point(Screen.PrimaryScreen.Bounds.Width - this.Width - 10, Screen.PrimaryScreen.Bounds.Height - this.Height - 60);
         
