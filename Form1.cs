@@ -15,6 +15,29 @@ public class Config
     public required string DestinationPath { get; set; }
 }
 
+public class CustomToolStripRenderer : ToolStripProfessionalRenderer
+{
+    protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
+    {
+        if (e.Item.Selected)
+        {
+            Rectangle rc = new Rectangle(Point.Empty, e.Item.Size);
+            e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(31, 102, 52)), rc);
+            e.Graphics.DrawRectangle(new Pen(Color.FromArgb(12, 0, 17)), 1, 0, rc.Width - 2, rc.Height - 1);
+        }
+        else
+        {
+            base.OnRenderMenuItemBackground(e);
+        }
+    }
+
+    protected override void OnRenderToolStripBackground(ToolStripRenderEventArgs e)
+    {
+        base.OnRenderToolStripBackground(e);
+        e.Graphics.Clear(Color.FromArgb(12, 0, 17));
+    }
+}
+
 public partial class Form1 : Form
 {
     private NotifyIcon notifyIcon;
@@ -37,18 +60,24 @@ public partial class Form1 : Form
         settingsToolStripMenuItem = new ToolStripMenuItem();
         backupToolStripMenuItem = new ToolStripMenuItem();
         ToolStripMenuLogItem = new ToolStripMenuItem();
+        contextMenuStrip.Renderer = new CustomToolStripRenderer();
+        contextMenuStrip.ShowImageMargin = false;
 
         ToolStripMenuLogItem.Text = "Afficher les logs";
         ToolStripMenuLogItem.Click += new EventHandler(ShowLogButton_Click);
+        ToolStripMenuLogItem.ForeColor = Color.White;
 
         exitToolStripMenuItem.Text = "Quitter";
         exitToolStripMenuItem.Click += new EventHandler(ExitToolStripMenuItem_Click);
+        exitToolStripMenuItem.ForeColor = Color.White;
 
         settingsToolStripMenuItem.Text = "Paramètres";
         settingsToolStripMenuItem.Click += new EventHandler(SettingsToolStripMenuItem_Click);
+        settingsToolStripMenuItem.ForeColor = Color.White;
 
         backupToolStripMenuItem.Text = "Sauvegarder maintenant";
         backupToolStripMenuItem.Click += new EventHandler(BackupToolStripMenuItem_Click);
+        backupToolStripMenuItem.ForeColor = Color.White;
 
         contextMenuStrip.Items.Add(backupToolStripMenuItem);
         contextMenuStrip.Items.Add(settingsToolStripMenuItem);
@@ -95,9 +124,11 @@ public partial class Form1 : Form
 
                 try
                 {
-                    using var stream = new FileStream(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                    using var reader = new StreamReader(stream);
+                    using (var stream = new FileStream(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var reader = new StreamReader(stream))
+                    {
                     logContent = reader.ReadToEnd();
+                    }
                 }
                 catch (IOException ex)
                 {
@@ -105,18 +136,28 @@ public partial class Form1 : Form
                 }
 
                 Form logForm = new Form();
-                TextBox logTextBox = new TextBox();
+                logForm.Icon = new Icon("maing.ico");
+                logForm.Text = "Logs";
+                logForm.FormBorderStyle = FormBorderStyle.Sizable;
 
+                TextBox logTextBox = new TextBox();
                 logTextBox.Multiline = true;
                 logTextBox.Dock = DockStyle.Fill;
                 logTextBox.ScrollBars = ScrollBars.Vertical;
                 logTextBox.Width = 600;
                 logTextBox.Height = 400;
-
                 logTextBox.Text = logContent;
-
                 logForm.Controls.Add(logTextBox);
+
+                Panel borderPanel = new Panel();
+                borderPanel.Dock = DockStyle.Fill;
+                borderPanel.Padding = new Padding(1);
+                borderPanel.Controls.Add(logTextBox);
+                logForm.Controls.Add(borderPanel);
+
                 logForm.Show();
+
+                
 
             }
             else
