@@ -79,9 +79,9 @@ public partial class SettingsForm : Form
         destinationTabPage.Controls.Add(backupIntervalLabel);
 
         backupIntervalNumericUpDown = new NumericUpDown();
-        backupIntervalNumericUpDown.Minimum = 1;
+        backupIntervalNumericUpDown.Minimum = 0;
         backupIntervalNumericUpDown.Maximum = 24;  // L'utilisateur peut choisir jusqu'à 24 heures
-        backupIntervalNumericUpDown.Value = 1;     // Par défaut, la sauvegarde est effectuée toutes les heures
+        backupIntervalNumericUpDown.Value = 0;     // Par défaut, la sauvegarde n'est pas effectuée
         backupIntervalNumericUpDown.Location = new System.Drawing.Point(20, 170); // Changez ces valeurs pour positionner le NumericUpDown à l'endroit souhaité
         destinationTabPage.Controls.Add(backupIntervalNumericUpDown);
 

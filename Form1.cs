@@ -101,7 +101,16 @@ public partial class Form1 : Form
             var config = JsonSerializer.Deserialize<Config>(configJson);
             if (config != null)
             {
-                backupTimer.Interval = config.BackupInterval * 3600000;  // Convert hours to milliseconds
+                if (config.BackupInterval > 0)
+                {
+                    backupTimer.Interval = config.BackupInterval * 3600000;  // Convert hours to milliseconds
+                    backupTimer.Start();
+                }
+                else
+                {
+                    backupTimer.Enabled = false;
+                }
+
                 maxBackupSizeInGB = config.BackupSizeLimit;
             }
             else
@@ -110,7 +119,6 @@ public partial class Form1 : Form
 
             }
         }
-        backupTimer.Start();
 
         this.WindowState = FormWindowState.Minimized;
         this.ShowInTaskbar = false;
@@ -176,10 +184,13 @@ public partial class Form1 : Form
 
     private void OnBackupTimerElapsed(object? Sender, System.Timers.ElapsedEventArgs e)
     {
-        this.Invoke((MethodInvoker)delegate
+        if (backupTimer.Enabled)
         {
-            BackupToolStripMenuItem_Click(null, null);
-        });
+            this.Invoke((MethodInvoker)delegate
+            {
+                BackupToolStripMenuItem_Click(null, null);
+            });
+        }
     }
     private void ExitToolStripMenuItem_Click(object? Sender, EventArgs e)
     {
@@ -362,10 +373,10 @@ public partial class Form1 : Form
         // Le fichier de configuration n'existe pas, créons-en un avec les valeurs par défaut
         var defaultConfig = new Config
         {
-            BackupSizeLimit = 20.0, // Default backup size limit of 20 GB
-            BackupInterval = 1.0,   // Default backup interval of 1 hour
+            BackupSizeLimit = 20.0, 
+            BackupInterval = 0,  
             SourcePaths = new List<string>(),
-            DestinationPath = ""    // Default destination path is empty
+            DestinationPath = ""
         };
 
         string configJson = JsonSerializer.Serialize(defaultConfig);

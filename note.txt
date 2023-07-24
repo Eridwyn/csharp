@@ -1,5 +1,5 @@
-Problème fichier log qui n'est pas créer
-Ajouter une gestion des fichiers log (suppression tous les mois)
 
-Modifier l'intervalle pour pouvoir désactiver.
 Trouver une solution pour gros fichier comme celui thunderbird, quidoit d'ailleur etre fermer pour executer la sauvegarde.
+
+Problème de présentation selon les pc les textes ou les boutons son croqué peut être passer sous wpf
+

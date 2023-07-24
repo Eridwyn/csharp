@@ -1,27 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Eridw\\source\\repos\\C#\\csharp.csproj": {}
+    "c:\\Users\\MAIRIE_PORTABLE1\\Documents\\WindowsPowerShell\\Scripts\\csharp\\csharp.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Eridw\\source\\repos\\C#\\csharp.csproj": {
+    "c:\\Users\\MAIRIE_PORTABLE1\\Documents\\WindowsPowerShell\\Scripts\\csharp\\csharp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Eridw\\source\\repos\\C#\\csharp.csproj",
+        "projectUniqueName": "c:\\Users\\MAIRIE_PORTABLE1\\Documents\\WindowsPowerShell\\Scripts\\csharp\\csharp.csproj",
         "projectName": "SaveTool",
-        "projectPath": "C:\\Users\\Eridw\\source\\repos\\C#\\csharp.csproj",
-        "packagesPath": "C:\\Users\\Eridw\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Eridw\\source\\repos\\C#\\obj\\",
+        "projectPath": "c:\\Users\\MAIRIE_PORTABLE1\\Documents\\WindowsPowerShell\\Scripts\\csharp\\csharp.csproj",
+        "packagesPath": "C:\\Users\\MAIRIE_PORTABLE1\\.nuget\\packages\\",
+        "outputPath": "c:\\Users\\MAIRIE_PORTABLE1\\Documents\\WindowsPowerShell\\Scripts\\csharp\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Eridw\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\MAIRIE_PORTABLE1\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0-windows"
         ],
-        "sources": {
-          "https://api.nuget.org/v3/index.json": {}
-        },
         "frameworks": {
           "net7.0-windows7.0": {
             "targetAlias": "net7.0-windows",
@@ -48,20 +45,6 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
-              "version": "[7.0.9, 7.0.9]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Runtime.win-x64",
-              "version": "[7.0.9, 7.0.9]"
-            },
-            {
-              "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
-              "version": "[7.0.9, 7.0.9]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
@@ -71,11 +54,6 @@
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.306\\RuntimeIdentifierGraph.json"
-        }
-      },
-      "runtimes": {
-        "win-x64": {
-          "#import": []
         }
       }
     }
