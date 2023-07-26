@@ -1,5 +1,17 @@
+3. **Gestion des gros fichiers :**
+   - Utiliser la fonctionnalité Shadow Copy (VSS) de Windows pour gérer la sauvegarde de gros fichiers. 
+   Cela permettra de créer une copie en lecture seule du fichier qui peut ensuite être sauvegardée sans interrompre 
+   l'accès en écriture au fichier original.
+   - Implémenter la sauvegarde différentielle sur les gros fichiers. Cela signifie que seuls les blocs de données qui ont été 
+   modifiés depuis la dernière sauvegarde seront sauvegardés, ce qui peut réduire considérablement le temps de sauvegarde et 
+   'espace de stockage nécessaire pour les gros fichiers.
+   
+4. **Sauvegarde à la fermeture de la session utilisateur :**
+   - reflexion en cours
+   
+5. **Amélioration de la présentation :**
+   - Passage sous winUI 3
 
-Trouver une solution pour gros fichier comme celui thunderbird, quidoit d'ailleur etre fermer pour executer la sauvegarde.
-
-Problème de présentation selon les pc les textes ou les boutons son croqué peut être passer sous wpf
+6.**Mettre en place une fonction de restauration :**
+   - Idealement dans un onglet spécifique
 
