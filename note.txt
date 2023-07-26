@@ -5,13 +5,16 @@
    - Implémenter la sauvegarde différentielle sur les gros fichiers. Cela signifie que seuls les blocs de données qui ont été 
    modifiés depuis la dernière sauvegarde seront sauvegardés, ce qui peut réduire considérablement le temps de sauvegarde et 
    'espace de stockage nécessaire pour les gros fichiers.
+
+4. **Changer la façon de créer les sauvegardes **
+On créerai des "items" avec les paramètres de sauvegarde qu'on pourrait modifier ou supprimer
    
-4. **Sauvegarde à la fermeture de la session utilisateur :**
+5. **Sauvegarde à la fermeture de la session utilisateur :**
    - reflexion en cours
    
-5. **Amélioration de la présentation :**
+6. **Amélioration de la présentation :**
    - Passage sous winUI 3
 
-6.**Mettre en place une fonction de restauration :**
+7.**Mettre en place une fonction de restauration :**
    - Idealement dans un onglet spécifique
 
